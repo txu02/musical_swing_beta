@@ -1,0 +1,57 @@
+{
+  "physics": {
+    "g": 9.81,
+    "length_m": 1.2,
+    "damping": 0.18,
+    "dt_physics": 0.001,
+    "wind_enabled": false,
+    "wind_sine_amp": 0.08,
+    "wind_sine_hz": 0.35,
+    "wind_noise_amp": 0.03,
+    "seed": 12345
+  },
+  "imu": {
+    "sample_hz": 1000,
+    "gyro_bias": 0.02,
+    "gyro_noise_std": 0.03,
+    "cross_axis_noise_std": 0.005,
+    "spikes_enabled": false,
+    "spike_prob_per_s": 0.2,
+    "spike_mag": 1.5,
+    "dropouts_enabled": false,
+    "dropout_prob_per_s": 0.2
+  },
+  "env": {
+    "attack_tau_s": 0.35,
+    "release_tau_s": 3.0,
+    "floor": 0.1,
+    "max_val": 2.0
+  },
+  "ctrl": {
+    "mode": "layered",
+    "T1": 0.2,
+    "T2": 0.45,
+    "T3": 0.7,
+    "hysteresis": 0.05,
+    "on_dwell_s": 0.35,
+    "off_dwell_s": 1.25,
+    "master_cap": 0.35,
+    "curve": "smoothstep",
+    "quiet_below_T1": true
+  },
+  "audio": {
+    "enabled": true,
+    "sample_rate": 48000,
+    "block_size": 512,
+    "gain_smoothing_tau_s": 0.08,
+    "f1_hz": 220.0,
+    "f2_hz": 440.0,
+    "f3_hz": 660.0,
+    "noise_level": 0.08,
+    "safe_mute": false
+  },
+  "ui": {
+    "ui_fps": 60,
+    "plot_seconds": 12.0
+  }
+}

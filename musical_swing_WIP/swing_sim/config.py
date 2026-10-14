@@ -1,0 +1,122 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, asdict
+from typing import Literal, Dict, Any
+import json
+
+
+Mode = Literal["layered", "single"]
+
+
+@dataclass
+class PhysicsConfig:
+    g: float = 9.81
+    length_m: float = 1.2            # effective pendulum length (tunable)
+    damping: float = 0.18            # viscous damping coefficient (tunable)
+    dt_physics: float = 0.001        # 1 kHz physics integration
+
+    # Wind forcing (small torque-like perturbation)
+    wind_enabled: bool = False
+    wind_sine_amp: float = 0.08      # torque amplitude in "rad/s^2-ish" units
+    wind_sine_hz: float = 0.35
+    wind_noise_amp: float = 0.03     # random perturbation amplitude
+    seed: int = 12345                # deterministic when set
+
+
+@dataclass
+class IMUConfig:
+    sample_hz: int = 1000
+    gyro_bias: float = 0.02          # constant bias offset
+    gyro_noise_std: float = 0.03     # Gaussian noise std
+    cross_axis_noise_std: float = 0.005
+
+    spikes_enabled: bool = False
+    spike_prob_per_s: float = 0.2
+    spike_mag: float = 1.5
+
+    dropouts_enabled: bool = False
+    dropout_prob_per_s: float = 0.2
+
+
+@dataclass
+class EnvelopeConfig:
+    # Asymmetric EMA time constants (seconds)
+    attack_tau_s: float = 0.35
+    release_tau_s: float = 3.0
+
+    # Normalization parameters (calibrated or manual)
+    floor: float = 0.10
+    max_val: float = 2.0
+
+
+@dataclass
+class ControlConfig:
+    mode: Mode = "layered"
+
+    # Thresholds on normalized x in [0,1]
+    T1: float = 0.20
+    T2: float = 0.45
+    T3: float = 0.70
+
+    hysteresis: float = 0.05          # off-threshold is (T - hysteresis)
+    on_dwell_s: float = 0.35          # require above T_on for this long
+    off_dwell_s: float = 1.25         # require below T_off for this long
+
+    # Master cap (overall multiplier applied after mixing)
+    master_cap: float = 0.35
+
+    # Gain mapping curve shaping
+    curve: Literal["linear", "smoothstep"] = "smoothstep"
+
+    # Quiet regime: mute below T1
+    quiet_below_T1: bool = True
+
+
+@dataclass
+class AudioConfig:
+    enabled: bool = True
+    sample_rate: int = 48000
+    block_size: int = 512
+
+    # Audio fade smoothing inside audio engine (seconds)
+    gain_smoothing_tau_s: float = 0.08
+
+    # Placeholder sources (frequencies)
+    f1_hz: float = 220.0
+    f2_hz: float = 440.0
+    f3_hz: float = 660.0
+
+    noise_level: float = 0.08        # third layer can include noise feel
+
+    safe_mute: bool = False
+
+
+@dataclass
+class UIConfig:
+    ui_fps: int = 60
+    plot_seconds: float = 12.0        # window length for envelope visualization
+
+
+@dataclass
+class AppConfig:
+    physics: PhysicsConfig = PhysicsConfig()
+    imu: IMUConfig = IMUConfig()
+    env: EnvelopeConfig = EnvelopeConfig()
+    ctrl: ControlConfig = ControlConfig()
+    audio: AudioConfig = AudioConfig()
+    ui: UIConfig = UIConfig()
+
+    def to_json(self) -> str:
+        return json.dumps(asdict(self), indent=2)
+
+    @staticmethod
+    def from_json(s: str) -> "AppConfig":
+        d: Dict[str, Any] = json.loads(s)
+        cfg = AppConfig()
+        cfg.physics = PhysicsConfig(**d["physics"])
+        cfg.imu = IMUConfig(**d["imu"])
+        cfg.env = EnvelopeConfig(**d["env"])
+        cfg.ctrl = ControlConfig(**d["ctrl"])
+        cfg.audio = AudioConfig(**d["audio"])
+        cfg.ui = UIConfig(**d["ui"])
+        return cfg
